@@ -15,12 +15,23 @@ public class CompaniesHouseService : ICompaniesHouseService
     {
         _httpClient = httpClient;
         _configuration = configuration;
-        _apiKey = _configuration["CompaniesHouse:ApiKey"] ?? "";
+        _apiKey = (_configuration["CompaniesHouse:ApiKey"] ?? "").Trim();
+        
+        if (string.IsNullOrEmpty(_apiKey))
+        {
+            Console.WriteLine("WARNING: CompaniesHouse API key is not configured!");
+        }
+        else
+        {
+            Console.WriteLine($"CompaniesHouse API key loaded (length: {_apiKey.Length})");
+        }
         
         _httpClient.BaseAddress = new Uri("https://api.company-information.service.gov.uk");
         
         var authValue = Convert.ToBase64String(Encoding.ASCII.GetBytes($"{_apiKey}:"));
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authValue);
+        _httpClient.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("AhhRight/1.0");
     }
 
     public async Task<List<CompanySearchResponse>> SearchCompaniesByNameAndCity(string businessName, string city)
@@ -30,10 +41,16 @@ public class CompaniesHouseService : ICompaniesHouseService
         try
         {
             var searchQuery = $"{businessName} {city}";
-            var response = await _httpClient.GetAsync($"/search/companies?q={Uri.EscapeDataString(searchQuery)}");
+            var url = $"/search/companies?q={Uri.EscapeDataString(searchQuery)}";
+            var response = await _httpClient.GetAsync(url);
+            
+            Console.WriteLine($"CH {url} -> {(int)response.StatusCode} {response.ReasonPhrase}");
 
             if (!response.IsSuccessStatusCode)
             {
+                Console.WriteLine($"Companies House API error: {response.StatusCode}");
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error details: {errorContent}");
                 return results;
             }
 
@@ -78,10 +95,16 @@ public class CompaniesHouseService : ICompaniesHouseService
     {
         try
         {
-            var response = await _httpClient.GetAsync($"/company/{companyNumber}");
+            var url = $"/company/{companyNumber}";
+            var response = await _httpClient.GetAsync(url);
+            
+            Console.WriteLine($"CH {url} -> {(int)response.StatusCode} {response.ReasonPhrase}");
 
             if (!response.IsSuccessStatusCode)
             {
+                Console.WriteLine($"Companies House API error getting profile: {response.StatusCode}");
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error details: {errorContent}");
                 return null;
             }
 
