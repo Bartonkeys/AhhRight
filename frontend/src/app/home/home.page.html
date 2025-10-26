@@ -1,0 +1,93 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>
+      AhhRight
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">AhhRight</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <div class="container">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Find Previous Business Names</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>Search for a business to see what it was previously called</p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="showCityInput">
+      <ion-card-header>
+        <ion-card-title>Set Your City</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="floating">City</ion-label>
+          <ion-input [(ngModel)]="city" placeholder="Enter your city"></ion-input>
+        </ion-item>
+        <ion-button expand="block" (click)="saveCity()" class="ion-margin-top">
+          Save City
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="!showCityInput">
+      <ion-card-header>
+        <ion-card-title>Search Business</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label position="floating">City</ion-label>
+          <ion-input [(ngModel)]="city" [disabled]="true"></ion-input>
+        </ion-item>
+        <ion-button fill="clear" size="small" (click)="changeCity()">
+          Change City
+        </ion-button>
+
+        <ion-item class="ion-margin-top">
+          <ion-label position="floating">Business Name</ion-label>
+          <ion-input [(ngModel)]="businessName" placeholder="Enter business name"></ion-input>
+        </ion-item>
+
+        <ion-button expand="block" (click)="searchCompanies()" class="ion-margin-top" [disabled]="loading">
+          <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
+          <span *ngIf="!loading">Search</span>
+        </ion-button>
+
+        <ion-text color="danger" *ngIf="error">
+          <p class="ion-text-center">{{ error }}</p>
+        </ion-text>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="results.length > 0">
+      <ion-card-header>
+        <ion-card-title>Results</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-list>
+          <ion-item *ngFor="let result of results">
+            <ion-label>
+              <h2>{{ result.companyName }}</h2>
+              <p>Company Number: {{ result.companyNumber }}</p>
+              <div *ngIf="result.previousNames.length > 0">
+                <h3>Previous Names:</h3>
+                <ul>
+                  <li *ngFor="let name of result.previousNames">{{ name }}</li>
+                </ul>
+              </div>
+              <p *ngIf="result.previousNames.length === 0">No previous names found</p>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

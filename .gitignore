@@ -1,0 +1,31 @@
+# .NET
+backend/bin/
+backend/obj/
+backend/*.user
+backend/*.suo
+backend/.vs/
+
+# Angular/Ionic
+frontend/node_modules/
+frontend/dist/
+frontend/www/
+frontend/.angular/
+frontend/.ionic/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+*.env
+appsettings.Development.json
+
+# Logs
+*.log
+npm-debug.log*

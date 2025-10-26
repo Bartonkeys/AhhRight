@@ -1,0 +1,6 @@
+@AhhRightApi_HostAddress = http://localhost:5089
+
+GET {{AhhRightApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
