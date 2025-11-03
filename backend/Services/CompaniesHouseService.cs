@@ -129,4 +129,160 @@ public class CompaniesHouseService : ICompaniesHouseService
             return null;
         }
     }
+
+    public async Task<StartupFeedResponse> GetNewlyRegisteredCompanies(StartupSearchRequest request)
+    {
+        var response = new StartupFeedResponse
+        {
+            PageSize = request.Size,
+            CurrentPage = request.StartIndex / request.Size
+        };
+
+        try
+        {
+            var queryParams = new List<string>();
+            
+            if (request.IncorporatedFrom.HasValue)
+            {
+                queryParams.Add($"incorporated_from={request.IncorporatedFrom.Value:yyyy-MM-dd}");
+            }
+            
+            if (request.IncorporatedTo.HasValue)
+            {
+                queryParams.Add($"incorporated_to={request.IncorporatedTo.Value:yyyy-MM-dd}");
+            }
+            
+            if (!string.IsNullOrEmpty(request.Location))
+            {
+                queryParams.Add($"location={Uri.EscapeDataString(request.Location)}");
+            }
+            
+            if (request.SicCodes != null && request.SicCodes.Any())
+            {
+                foreach (var sicCode in request.SicCodes)
+                {
+                    queryParams.Add($"sic_codes={Uri.EscapeDataString(sicCode)}");
+                }
+            }
+            
+            if (!string.IsNullOrEmpty(request.CompanyStatus))
+            {
+                queryParams.Add($"company_status={Uri.EscapeDataString(request.CompanyStatus)}");
+            }
+            
+            queryParams.Add($"size={request.Size}");
+            queryParams.Add($"start_index={request.StartIndex}");
+            
+            var url = $"/advanced-search/companies?{string.Join("&", queryParams)}";
+            
+            Console.WriteLine($"CH {url} -> Requesting...");
+            var httpResponse = await _httpClient.GetAsync(url);
+            
+            Console.WriteLine($"CH {url} -> {(int)httpResponse.StatusCode} {httpResponse.ReasonPhrase}");
+
+            if (!httpResponse.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Companies House API error: {httpResponse.StatusCode}");
+                var errorContent = await httpResponse.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error details: {errorContent}");
+                return response;
+            }
+
+            var content = await httpResponse.Content.ReadAsStringAsync();
+            var searchResult = JsonSerializer.Deserialize<AdvancedSearchResult>(content, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (searchResult?.Items == null || !searchResult.Items.Any())
+            {
+                Console.WriteLine("No companies found in advanced search results");
+                return response;
+            }
+
+            Console.WriteLine($"Found {searchResult.Items.Count} newly registered companies");
+
+            response.TotalResults = int.TryParse(searchResult.Hits, out var hits) ? hits : searchResult.Items.Count;
+            
+            foreach (var company in searchResult.Items)
+            {
+                response.Companies.Add(new StartupSearchResponse
+                {
+                    CompanyName = company.CompanyName,
+                    CompanyNumber = company.CompanyNumber,
+                    CompanyStatus = company.CompanyStatus,
+                    Location = company.RegisteredOfficeAddress?.Locality,
+                    SicCodes = new List<string>()
+                });
+            }
+            
+            Console.WriteLine($"Returning {response.Companies.Count} newly registered companies");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching newly registered companies: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        }
+
+        return response;
+    }
+
+    public async Task<TrendAnalysisResponse> GetStartupTrends(TrendAnalysisRequest request)
+    {
+        var response = new TrendAnalysisResponse
+        {
+            StartDate = request.StartDate,
+            EndDate = request.EndDate
+        };
+
+        try
+        {
+            var currentDate = request.StartDate;
+            var groupByDays = request.GroupBy.ToLower() switch
+            {
+                "week" => 7,
+                "month" => 30,
+                _ => 1
+            };
+
+            while (currentDate <= request.EndDate)
+            {
+                var periodEnd = currentDate.AddDays(groupByDays - 1);
+                if (periodEnd > request.EndDate)
+                {
+                    periodEnd = request.EndDate;
+                }
+
+                var searchRequest = new StartupSearchRequest
+                {
+                    IncorporatedFrom = currentDate,
+                    IncorporatedTo = periodEnd,
+                    Location = request.Location,
+                    SicCodes = request.SicCodes,
+                    Size = 1
+                };
+
+                var feedResponse = await GetNewlyRegisteredCompanies(searchRequest);
+                
+                response.TrendData.Add(new TrendDataPoint
+                {
+                    Date = currentDate,
+                    Count = feedResponse.TotalResults
+                });
+
+                response.TotalCompanies += feedResponse.TotalResults;
+
+                currentDate = periodEnd.AddDays(1);
+            }
+
+            Console.WriteLine($"Trend analysis complete: {response.TotalCompanies} total companies over {response.TrendData.Count} periods");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error performing trend analysis: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        }
+
+        return response;
+    }
 }

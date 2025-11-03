@@ -1,7 +1,7 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
-      AhhRight
+      Startup Tracker
     </ion-title>
   </ion-toolbar>
 </ion-header>
@@ -9,56 +9,52 @@
 <ion-content [fullscreen]="true">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">AhhRight</ion-title>
+      <ion-title size="large">Startup Tracker</ion-title>
     </ion-toolbar>
   </ion-header>
 
   <div class="container">
     <ion-card>
       <ion-card-header>
-        <ion-card-title>Find Previous Business Names</ion-card-title>
+        <ion-card-title>Track New Company Registrations</ion-card-title>
       </ion-card-header>
       <ion-card-content>
-        <p>Search for a business to see what it was previously called</p>
+        <p>Monitor newly registered companies and analyze startup trends across the UK</p>
       </ion-card-content>
     </ion-card>
 
-    <ion-card *ngIf="showCityInput">
+    <ion-card>
       <ion-card-header>
-        <ion-card-title>Set Your City</ion-card-title>
+        <ion-card-title>Filters</ion-card-title>
       </ion-card-header>
       <ion-card-content>
         <ion-item>
-          <ion-label position="floating">City</ion-label>
-          <ion-input [(ngModel)]="city" placeholder="Enter your city"></ion-input>
+          <ion-label position="floating">Location</ion-label>
+          <ion-input [(ngModel)]="location" placeholder="e.g., London, Manchester"></ion-input>
         </ion-item>
-        <ion-button expand="block" (click)="saveCity()" class="ion-margin-top">
-          Save City
-        </ion-button>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card *ngIf="!showCityInput">
-      <ion-card-header>
-        <ion-card-title>Search Business</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <ion-item>
-          <ion-label position="floating">City</ion-label>
-          <ion-input [(ngModel)]="city" [disabled]="true"></ion-input>
-        </ion-item>
-        <ion-button fill="clear" size="small" (click)="changeCity()">
-          Change City
-        </ion-button>
 
         <ion-item class="ion-margin-top">
-          <ion-label position="floating">Business Name</ion-label>
-          <ion-input [(ngModel)]="businessName" placeholder="Enter business name"></ion-input>
+          <ion-label position="floating">SIC Codes (comma-separated)</ion-label>
+          <ion-input [(ngModel)]="sicCodes" placeholder="e.g., 62012, 70221"></ion-input>
         </ion-item>
 
-        <ion-button expand="block" (click)="searchCompanies()" class="ion-margin-top" [disabled]="loading">
+        <ion-item class="ion-margin-top">
+          <ion-label position="floating">Date From</ion-label>
+          <ion-input type="date" [(ngModel)]="dateFrom"></ion-input>
+        </ion-item>
+
+        <ion-item class="ion-margin-top">
+          <ion-label position="floating">Date To</ion-label>
+          <ion-input type="date" [(ngModel)]="dateTo"></ion-input>
+        </ion-item>
+
+        <ion-button expand="block" (click)="loadStartups()" class="ion-margin-top" [disabled]="loading">
           <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
-          <span *ngIf="!loading">Search</span>
+          <span *ngIf="!loading">Search Startups</span>
+        </ion-button>
+
+        <ion-button expand="block" fill="outline" (click)="loadDailyStartups()" class="ion-margin-top" [disabled]="loading">
+          <span>Today's Registrations</span>
         </ion-button>
 
         <ion-text color="danger" *ngIf="error">
@@ -67,26 +63,34 @@
       </ion-card-content>
     </ion-card>
 
-    <ion-card *ngIf="results.length > 0">
+    <ion-card *ngIf="startups.length > 0">
       <ion-card-header>
-        <ion-card-title>Results</ion-card-title>
+        <ion-card-title>
+          Newly Registered Companies
+          <ion-badge color="primary" class="ion-margin-start">{{ totalResults }}</ion-badge>
+        </ion-card-title>
       </ion-card-header>
       <ion-card-content>
         <ion-list>
-          <ion-item *ngFor="let result of results">
+          <ion-item *ngFor="let startup of startups">
             <ion-label>
-              <h2>{{ result.companyName }}</h2>
-              <p>Company Number: {{ result.companyNumber }}</p>
-              <div *ngIf="result.previousNames.length > 0">
-                <h3>Previous Names:</h3>
-                <ul>
-                  <li *ngFor="let name of result.previousNames">{{ name }}</li>
-                </ul>
+              <h2>{{ startup.companyName }}</h2>
+              <p>Company Number: {{ startup.companyNumber }}</p>
+              <p>Status: {{ startup.companyStatus }}</p>
+              <p *ngIf="startup.location">Location: {{ startup.location }}</p>
+              <p *ngIf="startup.dateOfCreation">Registered: {{ startup.dateOfCreation | date }}</p>
+              <div *ngIf="startup.sicCodes && startup.sicCodes.length > 0">
+                <p>SIC Codes: {{ startup.sicCodes.join(', ') }}</p>
               </div>
-              <p *ngIf="result.previousNames.length === 0">No previous names found</p>
             </ion-label>
           </ion-item>
         </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="startups.length === 0 && !loading && searched">
+      <ion-card-content>
+        <p class="ion-text-center">No companies found matching your criteria</p>
       </ion-card-content>
     </ion-card>
   </div>
