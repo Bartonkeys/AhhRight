@@ -40,8 +40,10 @@ public class CompaniesHouseService : ICompaniesHouseService
 
         try
         {
-            var searchQuery = $"{businessName} {city}";
-            var url = $"/search/companies?q={Uri.EscapeDataString(searchQuery)}";
+            var size = _configuration.GetValue<int>("CompaniesHouse:AdvancedSearchSize", 50);
+            var url = $"/advanced-search/companies?company_name_includes={Uri.EscapeDataString(businessName)}&location={Uri.EscapeDataString(city)}&size={size}";
+            
+            Console.WriteLine($"CH {url} -> Requesting...");
             var response = await _httpClient.GetAsync(url);
             
             Console.WriteLine($"CH {url} -> {(int)response.StatusCode} {response.ReasonPhrase}");
@@ -55,18 +57,20 @@ public class CompaniesHouseService : ICompaniesHouseService
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            var searchResult = JsonSerializer.Deserialize<CompaniesHouseSearchResult>(content, new JsonSerializerOptions
+            var searchResult = JsonSerializer.Deserialize<AdvancedSearchResult>(content, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
 
             if (searchResult?.Items == null || !searchResult.Items.Any())
             {
+                Console.WriteLine("No companies found in advanced search results");
                 return results;
             }
 
-            foreach (var company in searchResult.Items.Where(c => 
-                c.Address?.Locality?.Contains(city, StringComparison.OrdinalIgnoreCase) == true))
+            Console.WriteLine($"Found {searchResult.Items.Count} companies in advanced search");
+
+            foreach (var company in searchResult.Items)
             {
                 var companyProfile = await GetCompanyProfile(company.CompanyNumber);
                 
@@ -82,10 +86,13 @@ public class CompaniesHouseService : ICompaniesHouseService
                     });
                 }
             }
+            
+            Console.WriteLine($"Returning {results.Count} companies with previous names");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error searching companies: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
         }
 
         return results;

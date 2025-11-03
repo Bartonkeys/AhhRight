@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AhhRightApi.Models;
 
 public class CompaniesHouseSearchResult
@@ -23,6 +25,57 @@ public class Address
     public string PostalCode { get; set; } = string.Empty;
     public string AddressLine1 { get; set; } = string.Empty;
     public string AddressLine2 { get; set; } = string.Empty;
+}
+
+public class AdvancedSearchResult
+{
+    [JsonPropertyName("etag")]
+    public string Etag { get; set; } = string.Empty;
+    
+    [JsonPropertyName("hits")]
+    public string Hits { get; set; } = string.Empty;
+    
+    [JsonPropertyName("items")]
+    public List<AdvancedCompanyItem> Items { get; set; } = new();
+    
+    [JsonPropertyName("kind")]
+    public string Kind { get; set; } = string.Empty;
+}
+
+public class AdvancedCompanyItem
+{
+    [JsonPropertyName("company_name")]
+    public string CompanyName { get; set; } = string.Empty;
+    
+    [JsonPropertyName("company_number")]
+    public string CompanyNumber { get; set; } = string.Empty;
+    
+    [JsonPropertyName("company_status")]
+    public string CompanyStatus { get; set; } = string.Empty;
+    
+    [JsonPropertyName("registered_office_address")]
+    public RegisteredOfficeAddress? RegisteredOfficeAddress { get; set; }
+}
+
+public class RegisteredOfficeAddress
+{
+    [JsonPropertyName("address_line_1")]
+    public string AddressLine1 { get; set; } = string.Empty;
+    
+    [JsonPropertyName("address_line_2")]
+    public string AddressLine2 { get; set; } = string.Empty;
+    
+    [JsonPropertyName("locality")]
+    public string Locality { get; set; } = string.Empty;
+    
+    [JsonPropertyName("postal_code")]
+    public string PostalCode { get; set; } = string.Empty;
+    
+    [JsonPropertyName("region")]
+    public string Region { get; set; } = string.Empty;
+    
+    [JsonPropertyName("country")]
+    public string Country { get; set; } = string.Empty;
 }
 
 public class CompanyProfile
