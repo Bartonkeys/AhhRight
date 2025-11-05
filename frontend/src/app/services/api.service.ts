@@ -41,4 +41,8 @@ export class ApiService {
   getStartupTrends(request: TrendAnalysisRequest): Observable<TrendAnalysisResponse> {
     return this.http.post<TrendAnalysisResponse>(`${this.apiUrl}/api/company/startups/trends`, request);
   }
+
+  getSicCodes(): Observable<{ [key: string]: string }> {
+    return this.http.get<{ [key: string]: string }>(`${this.apiUrl}/api/company/sic-codes`);
+  }
 }

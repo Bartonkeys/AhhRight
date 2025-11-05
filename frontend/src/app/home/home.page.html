@@ -33,10 +33,17 @@
           <ion-input [(ngModel)]="location" placeholder="e.g., London, Manchester"></ion-input>
         </ion-item>
 
-        <ion-item class="ion-margin-top">
-          <ion-label position="floating">SIC Codes (comma-separated)</ion-label>
-          <ion-input [(ngModel)]="sicCodes" placeholder="e.g., 62012, 70221"></ion-input>
-        </ion-item>
+        <div class="ion-margin-top">
+          <ion-label>SIC Codes (Industry Sectors)</ion-label>
+          <ion-button expand="block" fill="outline" (click)="openSicCodeSelector()" class="ion-margin-top">
+            Select SIC Codes
+          </ion-button>
+          <div class="sic-codes-container" *ngIf="selectedSicCodes.length > 0">
+            <ion-chip *ngFor="let code of selectedSicCodes" (click)="removeSicCode(code)">
+              <ion-label>{{ code }}</ion-label>
+            </ion-chip>
+          </div>
+        </div>
 
         <ion-item class="ion-margin-top">
           <ion-label position="floating">Date From</ion-label>

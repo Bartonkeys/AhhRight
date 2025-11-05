@@ -1,0 +1,54 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Select SIC Codes</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()">Cancel</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [(ngModel)]="searchTerm"
+      (ionInput)="filterSicCodes($event)"
+      placeholder="Search by code or description"
+      debounce="300">
+    </ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="selection-info" *ngIf="selectedSicCodes.size > 0">
+    <ion-badge color="primary">{{ selectedSicCodes.size }} selected</ion-badge>
+    <ion-button fill="clear" size="small" (click)="clearSelection()">
+      Clear All
+    </ion-button>
+  </div>
+
+  <ion-list *ngIf="!loading">
+    <ion-item *ngFor="let sicCode of filteredSicCodes" (click)="toggleSicCode(sicCode.code)">
+      <ion-checkbox
+        slot="start"
+        [checked]="isSicCodeSelected(sicCode.code)"
+        (ionChange)="toggleSicCode(sicCode.code)">
+      </ion-checkbox>
+      <ion-label>
+        <h3>{{ sicCode.code }}</h3>
+        <p>{{ sicCode.description }}</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <div class="loading-container" *ngIf="loading">
+    <ion-spinner></ion-spinner>
+    <p>Loading SIC codes...</p>
+  </div>
+
+  <div class="no-results" *ngIf="!loading && filteredSicCodes.length === 0">
+    <p>No SIC codes found matching "{{ searchTerm }}"</p>
+  </div>
+</ion-content>
+
+<ion-toolbar class="footer-toolbar">
+  <ion-button expand="block" (click)="confirm()" [disabled]="selectedSicCodes.size === 0">
+    Confirm Selection ({{ selectedSicCodes.size }})
+  </ion-button>
+</ion-toolbar>

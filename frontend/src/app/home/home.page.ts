@@ -17,10 +17,13 @@ import {
   IonList,
   IonSpinner,
   IonText,
-  IonBadge
+  IonBadge,
+  IonChip,
+  ModalController
 } from '@ionic/angular/standalone';
 import { ApiService } from '../services/api.service';
 import { StartupSearchResponse } from '../models/company.model';
+import { SicCodeSelectorModalComponent } from '../components/sic-code-selector-modal.component';
 
 @Component({
   selector: 'app-home',
@@ -44,12 +47,13 @@ import { StartupSearchResponse } from '../models/company.model';
     IonList,
     IonSpinner,
     IonText,
-    IonBadge
+    IonBadge,
+    IonChip
   ],
 })
 export class HomePage implements OnInit {
   location: string = '';
-  sicCodes: string = '';
+  selectedSicCodes: string[] = [];
   dateFrom: string = '';
   dateTo: string = '';
   startups: StartupSearchResponse[] = [];
@@ -59,7 +63,8 @@ export class HomePage implements OnInit {
   searched: boolean = false;
 
   constructor(
-    private apiService: ApiService
+    private apiService: ApiService,
+    private modalController: ModalController
   ) {}
 
   ngOnInit() {
@@ -75,14 +80,31 @@ export class HomePage implements OnInit {
     return date.toISOString().split('T')[0];
   }
 
+  async openSicCodeSelector() {
+    const modal = await this.modalController.create({
+      component: SicCodeSelectorModalComponent
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    if (data) {
+      this.selectedSicCodes = data;
+    }
+  }
+
+  removeSicCode(code: string) {
+    this.selectedSicCodes = this.selectedSicCodes.filter(c => c !== code);
+  }
+
   loadStartups() {
     this.loading = true;
     this.error = '';
     this.startups = [];
     this.searched = true;
 
-    const sicCodesArray = this.sicCodes.trim() 
-      ? this.sicCodes.split(',').map(code => code.trim()).filter(code => code)
+    const sicCodesArray = this.selectedSicCodes.length > 0 
+      ? this.selectedSicCodes
       : undefined;
 
     this.apiService.getStartupFeed({
@@ -115,7 +137,9 @@ export class HomePage implements OnInit {
     this.startups = [];
     this.searched = true;
 
-    const sicCodesString = this.sicCodes.trim() || undefined;
+    const sicCodesString = this.selectedSicCodes.length > 0 
+      ? this.selectedSicCodes.join(',')
+      : undefined;
 
     this.apiService.getDailyStartups(
       this.location.trim() || undefined,

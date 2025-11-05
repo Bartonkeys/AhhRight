@@ -59,3 +59,8 @@ export interface TrendAnalysisResponse {
   locationBreakdown: { [key: string]: number };
   industryBreakdown: { [key: string]: number };
 }
+
+export interface SicCode {
+  code: string;
+  description: string;
+}
