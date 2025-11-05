@@ -33,7 +33,7 @@ public class AdvancedSearchResult
     public string Etag { get; set; } = string.Empty;
     
     [JsonPropertyName("hits")]
-    public string Hits { get; set; } = string.Empty;
+    public int Hits { get; set; }
     
     [JsonPropertyName("items")]
     public List<AdvancedCompanyItem> Items { get; set; } = new();

@@ -65,4 +65,11 @@ public class CompanyController : ControllerBase
         var results = await _companiesHouseService.GetStartupTrends(request);
         return Ok(results);
     }
+
+    [HttpGet("sic-codes")]
+    public ActionResult<StartupFeedResponse> GetSicCodes()
+    {
+        var results = SicCodeHelper.GetSicCodesDictionary();
+        return Ok(results);
+    }
 }

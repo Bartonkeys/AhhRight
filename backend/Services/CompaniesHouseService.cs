@@ -202,7 +202,7 @@ public class CompaniesHouseService : ICompaniesHouseService
 
             Console.WriteLine($"Found {searchResult.Items.Count} newly registered companies");
 
-            response.TotalResults = int.TryParse(searchResult.Hits, out var hits) ? hits : searchResult.Items.Count;
+            response.TotalResults = searchResult.Hits;
             
             foreach (var company in searchResult.Items)
             {
